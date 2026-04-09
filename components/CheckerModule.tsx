@@ -1,0 +1,190 @@
+"use client";
+
+import { useState, useRef, useEffect } from 'react';
+
+interface LogEntry {
+  id: string; // Mudado para string para comportar IDs únicos
+  time: string;
+  type: 'hit' | 'fail' | 'info' | 'error';
+  message: string;
+}
+
+const FIXED_PROXY = '3ee54d1ec977870e6156:69cb68fe09fc14c6@gw.dataimpulse.com:823';
+
+export default function CheckerModule({ initialCredentials, onCredentialsChange }: { initialCredentials?: string, onCredentialsChange?: (val: string) => void }) {
+  const [credentials, setCredentials] = useState(initialCredentials || '');
+  const [isRunning, setIsRunning] = useState(false);
+  const isRunningRef = useRef(false); // Ref para controle preciso dentro do loop async
+  const [progress, setProgress] = useState({ current: 0, total: 0, hits: 0, fails: 0 });
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const logEndRef = useRef<HTMLDivElement>(null);
+
+  // Sincroniza se o valor inicial mudar lá fora
+  useEffect(() => {
+    if (initialCredentials) setCredentials(initialCredentials);
+  }, [initialCredentials]);
+
+  const handleCredentialsChange = (val: string) => {
+    setCredentials(val);
+    onCredentialsChange?.(val);
+  };
+
+  const addLog = (type: LogEntry['type'], message: string) => {
+    setLogs(prev => [...prev.slice(-100), {
+      id: crypto.randomUUID(), // ID universalmente único gerado pelo navegador
+      time: new Date().toLocaleTimeString(),
+      type,
+      message
+    }]);
+  };
+
+  useEffect(() => {
+    logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [logs]);
+
+  const startChecking = async () => {
+    const credLines = credentials.split(/\r?\n/).filter(l => l.includes(':'));
+    
+    if (credLines.length === 0) return alert('Por favor, insira credenciais no formato email:senha');
+    
+    setIsRunning(true);
+    isRunningRef.current = true;
+    setProgress({ current: 0, total: credLines.length, hits: 0, fails: 0 });
+    setLogs([]);
+    addLog('info', `Iniciando validação de ${credLines.length} contas...`);
+
+    let hitCount = 0;
+    let failCount = 0;
+
+    for (let i = 0; i < credLines.length; i++) {
+      if (!isRunningRef.current) break; // Agora o controle é feito via Ref
+
+      const [username, password] = credLines[i].split(':').map(s => s.trim());
+      const currentProxy = FIXED_PROXY;
+
+      addLog('info', `Verificando: ${username}...`);
+
+      try {
+        const res = await fetch('/api/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password, proxy: currentProxy })
+        });
+
+        const result = await res.json();
+
+        if (result.success) {
+          hitCount++;
+          addLog('hit', `[SUCESSO] ${username}:${password}`);
+        } else {
+          failCount++;
+          const msg = result.message || result.error || 'Falha Desconhecida';
+          addLog('fail', `[FALHA] ${username} - ${msg}`);
+        }
+      } catch (err: any) {
+        failCount++;
+        addLog('error', `[ERRO] ${username} - Problema na conexão`);
+      }
+
+      setProgress(prev => ({ ...prev, current: i + 1, hits: hitCount, fails: failCount }));
+      
+      // Delay de respiro entre contas
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
+    addLog('info', 'Processo finalizado!');
+    setIsRunning(false);
+    isRunningRef.current = false;
+  };
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '350px 1fr', gap: '24px' }}>
+      {/* Sidebar: Inputs & Stats */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="glass-card">
+          <h3 style={{ marginBottom: '16px', fontSize: '18px' }}>Configuração</h3>
+          
+          <label style={{ fontSize: '12px', opacity: 0.6, display: 'block', marginBottom: '8px' }}>Credenciais (user:pass)</label>
+          <textarea 
+            className="input-field" 
+            style={{ height: '220px', fontSize: '11px', marginBottom: '20px' }}
+            value={credentials}
+            onChange={(e) => handleCredentialsChange(e.target.value)}
+            disabled={isRunning}
+          />
+
+          <div style={{ marginBottom: '20px', padding: '12px', background: 'rgba(109, 40, 217, 0.1)', borderRadius: '8px', border: '1px solid rgba(109, 40, 217, 0.3)' }}>
+            <p style={{ fontSize: '11px', opacity: 0.6, marginBottom: '4px' }}>Proxy Ativo:</p>
+            <p style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--accent-primary)', wordBreak: 'break-all' }}>DataImpulse (Premium)</p>
+          </div>
+
+          <button 
+            className="btn-primary" 
+            style={{ width: '100%' }}
+            onClick={startChecking}
+            disabled={isRunning}
+          >
+            {isRunning ? 'Validando...' : '🛡️ Iniciar Validação'}
+          </button>
+        </div>
+
+        <div className="glass-card" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ fontSize: '12px', opacity: 0.6 }}>Hits</p>
+            <h4 style={{ fontSize: '24px', color: 'var(--success)' }}>{progress.hits}</h4>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ fontSize: '12px', opacity: 0.6 }}>Fails</p>
+            <h4 style={{ fontSize: '24px', color: 'var(--error)' }}>{progress.fails}</h4>
+          </div>
+          <div style={{ gridColumn: '1 / -1', marginTop: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px' }}>
+              <span>Progresso</span>
+              <span>{Math.round((progress.current / progress.total) * 100 || 0)}%</span>
+            </div>
+            <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '10px', overflow: 'hidden' }}>
+              <div style={{ 
+                width: `${(progress.current / progress.total) * 100}%`, 
+                height: '100%', 
+                background: 'var(--accent-primary)',
+                transition: 'width 0.3s ease'
+              }} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main: Log Console */}
+      <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', height: '600px' }}>
+        <h3 style={{ marginBottom: '16px', fontSize: '18px' }}>Console de Log</h3>
+        <div style={{ 
+          flex: 1, 
+          background: 'rgba(0,0,0,0.4)', 
+          borderRadius: '12px', 
+          padding: '20px', 
+          fontFamily: 'monospace', 
+          fontSize: '13px', 
+          overflowY: 'auto',
+          border: '1px solid var(--border-color)'
+        }}>
+          {logs.length === 0 ? (
+            <p style={{ opacity: 0.2, textAlign: 'center', marginTop: '200px' }}>Aguardando início...</p>
+          ) : (
+            logs.map(log => (
+              <div key={log.id} style={{ marginBottom: '6px', borderBottom: '1px solid rgba(255,255,255,0.03)', paddingBottom: '4px' }}>
+                <span style={{ opacity: 0.4, marginRight: '10px' }}>[{log.time}]</span>
+                <span style={{ 
+                  color: log.type === 'hit' ? 'var(--success)' : log.type === 'fail' ? 'var(--error)' : log.type === 'error' ? '#f87171' : 'var(--foreground)',
+                  fontWeight: log.type === 'hit' ? 'bold' : 'normal'
+                }}>
+                  {log.message}
+                </span>
+              </div>
+            ))
+          )}
+          <div ref={logEndRef} />
+        </div>
+      </div>
+    </div>
+  );
+}
