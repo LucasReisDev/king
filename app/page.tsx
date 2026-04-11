@@ -3,10 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ExtractorModule from '@/components/ExtractorModule';
-import ScraperModule from '@/components/ScraperModule';
 import CheckerModule from '@/components/CheckerModule';
 
-type Tab = 'extrator' | 'scraper' | 'checker';
+type Tab = 'extrator' | 'checker';
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<Tab>('extrator');
