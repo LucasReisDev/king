@@ -1,0 +1,31 @@
+[phases.setup]
+pkgs = [
+    "nodejs_18",
+    "chromium",
+    "libgbm",
+    "libatk-1_0-0",
+    "libx11-6",
+    "libxcomposite1",
+    "libxcursor1",
+    "libxdamage1",
+    "libxext6",
+    "libxfixes3",
+    "libxi6",
+    "libxrandr2",
+    "libxrender1",
+    "libxss1",
+    "libxtst6",
+    "nss",
+    "nspr",
+    "alsa-lib",
+    "cups-libs",
+    "libxkbcommon",
+    "pango",
+    "cairo"
+]
+
+[phases.build]
+cmds = ["npm install"]
+
+[phases.start]
+cmds = ["npm run start"]

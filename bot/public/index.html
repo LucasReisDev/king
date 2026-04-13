@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Vendas WhatsApp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #25d366;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
+            --accent: #3b82f6;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--card);
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, #25d366, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p {
+            color: #94a3b8;
+            margin-bottom: 2rem;
+        }
+
+        /* Seção de QR Code */
+        #qrSection {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 2rem;
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+            display: none;
+        }
+
+        #qrSection.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        #qrImage {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 1rem 0;
+            max-width: 200px;
+        }
+
+        .stats {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            padding: 1rem;
+            border-radius: 12px;
+            flex: 1;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .stat-card span {
+            display: block;
+            font-size: 0.8rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-card strong {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+
+        textarea {
+            width: 100%;
+            height: 250px;
+            background: rgba(0,0,0,0.2);
+            border: 1.5px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 1rem;
+            color: #e2e8f0;
+            font-size: 1rem;
+            resize: none;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        textarea:focus {
+            border-color: var(--primary);
+        }
+
+        button {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            margin-top: 1.5rem;
+        }
+
+        button:hover {
+            background: #20bd5c;
+            transform: translateY(-2px);
+        }
+
+        .footer {
+            margin-top: 2rem;
+            font-size: 0.85rem;
+            text-align: center;
+            color: #475569;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            background: var(--accent);
+            color: white;
+            transform: translateY(100px);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 100;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dashboard do Bot de Vendas</h1>
+        <p>Gerencie suas vendas e a conexão do WhatsApp aqui.</p>
+
+        <!-- Seção de QR Code Dinâmico -->
+        <div id="qrSection">
+            <h3 style="margin: 0; color: var(--accent);">⚠️ WhatsApp Desconectado</h3>
+            <p style="margin: 5px 0; font-size: 0.9rem;">Escaneie o código abaixo para ativar o bot:</p>
+            <img id="qrImage" src="" alt="QR Code WhatsApp">
+            <div style="font-size: 0.8rem; color: #94a3b8;">Aguardando conexão...</div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <span>Dados no Banco</span>
+                <strong id="count">...</strong>
+            </div>
+            <div class="stat-card">
+                <span>Status do Bot</span>
+                <strong id="botStatusDisplay">Verificando...</strong>
+            </div>
+        </div>
+
+        <textarea id="dataInput" placeholder="Cole aqui (iniciando com 'Detalhe da' ou 'Detalhe da venda'). Use traços (---) entre as vendas..."></textarea>
+        
+        <div style="display: flex; gap: 1rem;">
+            <button id="saveBtn" style="flex: 2;">Salvar no Banco</button>
+            <button id="fileBtn" style="flex: 1; background: var(--card); border: 1px solid var(--primary); color: var(--primary);">📂 Carregar .txt</button>
+        </div>
+        <input type="file" id="fileInput" accept=".txt" style="display: none;">
+
+        <div class="footer">
+            Local: http://localhost:3000 | Versão 2.2
+        </div>
+    </div>
+
+    <div id="toast" class="toast">✅ Dados salvos com sucesso!</div>
+
+    <script>
+        const countEl = document.getElementById('count');
+        const botStatusEl = document.getElementById('botStatusDisplay');
+        const qrSection = document.getElementById('qrSection');
+        const qrImage = document.getElementById('qrImage');
+        const dataInput = document.getElementById('dataInput');
+        const saveBtn = document.getElementById('saveBtn');
+        const fileBtn = document.getElementById('fileBtn');
+        const fileInput = document.getElementById('fileInput');
+        const toast = document.getElementById('toast');
+
+        // Aciona o seletor de arquivo
+        fileBtn.onclick = () => fileInput.click();
+
+        // Lê o arquivo TXT e coloca no textarea
+        fileInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                dataInput.value = e.target.result;
+                showToast('📄 Arquivo carregado! Clique em Salvar.');
+            };
+            reader.readAsText(file);
+        };
+
+        // Atualiza o Status Completo (Contagem + WhatsApp)
+        async function updateStatus() {
+            try {
+                const res = await fetch('/api/status');
+                const data = await res.json();
+                
+                // Atualiza contagem
+                countEl.innerText = data.total;
+                
+                // Atualiza status visual
+                if (data.status === 'READY') {
+                    botStatusEl.innerText = 'ONLINE';
+                    botStatusEl.style.color = '#25d366';
+                    qrSection.classList.remove('active');
+                } else {
+                    botStatusEl.innerText = 'AGUARDANDO QR';
+                    botStatusEl.style.color = '#f59e0b';
+                    
+                    // Exibe QR se disponível
+                    if (data.qr) {
+                        qrImage.src = data.qr;
+                        qrSection.classList.add('active');
+                    }
+                }
+            } catch (err) {
+                botStatusEl.innerText = 'ERRO';
+                botStatusEl.style.color = '#ef4444';
+            }
+        }
+
+        function showToast(msg) {
+            toast.innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        saveBtn.onclick = async () => {
+            const content = dataInput.value.trim();
+            if (!content) return;
+
+            saveBtn.disabled = true;
+            saveBtn.innerText = 'Salvando...';
+
+            try {
+                const res = await fetch('/api/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content })
+                });
+
+                const result = await res.json();
+                if (result.success) {
+                    showToast(`✅ ${result.added} vendas adicionadas!`);
+                    dataInput.value = '';
+                    updateStatus();
+                } else {
+                    showToast('❌ Erro ao salvar.');
+                }
+            } catch (err) {
+                showToast('❌ Erro de conexão.');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerText = 'Salvar no Banco';
+            }
+        };
+
+        // Atualiza ao carregar e a cada 3 segundos
+        updateStatus();
+        setInterval(updateStatus, 3000);
+    </script>
+</body>
+</html>

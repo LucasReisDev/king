@@ -1,0 +1,15 @@
+2026/03/19-11:44:32.700 1d5c Reusing MANIFEST C:\Users\MATRACA\Desktop\Automação\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2026/03/19-11:44:32.700 1d5c Recovering log #368
+2026/03/19-11:44:32.733 1d5c Reusing old log C:\Users\MATRACA\Desktop\Automação\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000368.log 
+2026/03/19-11:44:45.273 1d5c Level-0 table #378: started
+2026/03/19-11:44:45.308 1d5c Level-0 table #378: 1260011 bytes OK
+2026/03/19-11:44:45.311 1d5c Delete type=0 #368
+2026/03/19-11:44:46.653 3798 Compacting 1@1 + 6@2 files
+2026/03/19-11:44:46.724 3798 Generated table #379@1: 72765 keys, 2217653 bytes
+2026/03/19-11:44:46.802 3798 Generated table #380@1: 95317 keys, 2246743 bytes
+2026/03/19-11:44:46.878 3798 Generated table #381@1: 91377 keys, 2293880 bytes
+2026/03/19-11:44:46.934 3798 Generated table #382@1: 20438 keys, 2175641 bytes
+2026/03/19-11:44:46.984 3798 Generated table #383@1: 16689 keys, 2201960 bytes
+2026/03/19-11:44:47.031 3798 Generated table #384@1: 23077 keys, 2157293 bytes
+2026/03/19-11:44:47.031 3798 Compacted 1@1 + 6@2 files => 13293170 bytes
+2026/03/19-11:44:47.032 3798 compacted to: files[ 0 0 7 0 0 0 0 ]

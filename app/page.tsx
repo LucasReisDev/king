@@ -4,8 +4,11 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ExtractorModule from '@/components/ExtractorModule';
 import CheckerModule from '@/components/CheckerModule';
+import WhatsAppModule from '@/components/WhatsAppModule';
 
-type Tab = 'extrator' | 'checker';
+
+type Tab = 'extrator' | 'checker' | 'whatsapp';
+
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<Tab>('extrator');
@@ -34,9 +37,9 @@ export default function DashboardPage() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--background)' }}>
       {/* Sidebar */}
-      <aside style={{ 
-        width: '260px', 
-        background: 'rgba(15, 15, 20, 0.9)', 
+      <aside style={{
+        width: '260px',
+        background: 'rgba(15, 15, 20, 0.9)',
         backdropFilter: 'blur(20px)',
         borderRight: '1px solid var(--border-color)',
         padding: '32px 20px',
@@ -53,22 +56,29 @@ export default function DashboardPage() {
         </div>
 
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
-          <TabButton 
-            active={activeTab === 'extrator'} 
+          <TabButton
+            active={activeTab === 'extrator'}
             onClick={() => setActiveTab('extrator')}
-            icon="✨" 
-            label="Extrator Visual" 
+            icon="✨"
+            label="Extrator Visual"
           />
-          <TabButton 
-            active={activeTab === 'checker'} 
+          <TabButton
+            active={activeTab === 'checker'}
             onClick={() => setActiveTab('checker')}
-            icon="🛡️" 
-            label="Validador Bling" 
+            icon="🛡️"
+            label="Validador Bling"
           />
+          <TabButton
+            active={activeTab === 'whatsapp'}
+            onClick={() => setActiveTab('whatsapp')}
+            icon="💬"
+            label="Bot do whatsapp"
+          />
+
         </nav>
 
         <div style={{ marginTop: 'auto', padding: '16px', borderTop: '1px solid var(--border-color)' }}>
-          <button 
+          <button
             onClick={() => { localStorage.removeItem('isAuth'); router.push('/login'); }}
             style={{ background: 'none', border: 'none', color: 'var(--error)', cursor: 'pointer', fontSize: '14px', opacity: 0.8, width: '100%', textAlign: 'left' }}
           >
@@ -84,6 +94,8 @@ export default function DashboardPage() {
             <h1 style={{ fontSize: '32px', fontWeight: '800', color: '#fff', marginBottom: '8px' }}>
               {activeTab === 'extrator' && "Extração Inteligente"}
               {activeTab === 'checker' && "Validação de Acessos"}
+              {activeTab === 'whatsapp' && "Central de Vendas WhatsApp"}
+
             </h1>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--success)', boxShadow: '0 0 10px var(--success)' }}></span>
@@ -100,12 +112,14 @@ export default function DashboardPage() {
         <div className="animate-fade-in">
           {activeTab === 'extrator' && <ExtractorModule onExport={handleExportToChecker} />}
           {activeTab === 'checker' && (
-            <CheckerModule 
-              initialCredentials={sharedCredentials} 
+            <CheckerModule
+              initialCredentials={sharedCredentials}
               onCredentialsChange={setSharedCredentials}
             />
           )}
+          {activeTab === 'whatsapp' && <WhatsAppModule />}
         </div>
+
       </main>
     </div>
   );
