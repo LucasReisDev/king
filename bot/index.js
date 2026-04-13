@@ -86,9 +86,15 @@ const client = new Client({
             '--no-zygote',
             '--disable-gpu'
         ],
-        executablePath: process.env.CHROME_BIN || '/usr/bin/chromium'
+        // Tenta encontrar o cromo em caminhos comuns do Linux/Railway
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || 
+                        process.env.CHROME_BIN || 
+                        '/usr/bin/chromium' || 
+                        '/usr/bin/chromium-browser' || 
+                        '/usr/bin/google-chrome-stable'
     }
 });
+
 
 
 const qrPath = path.join(__dirname, 'qr.png');
