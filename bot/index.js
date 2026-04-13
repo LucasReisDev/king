@@ -7,6 +7,25 @@ const express = require('express');
 const db = require('./database');
 const cors = require('cors');
 
+// Função para encontrar o executável do Chrome no Linux
+function getChromePath() {
+    if (process.env.PUPPETEER_EXECUTABLE_PATH) return process.env.PUPPETEER_EXECUTABLE_PATH;
+    if (process.env.CHROME_BIN) return process.env.CHROME_BIN;
+    
+    const commonPaths = [
+        '/usr/bin/chromium',
+        '/usr/bin/chromium-browser',
+        '/usr/bin/google-chrome-stable',
+        '/usr/bin/google-chrome',
+        '/usr/local/bin/chromium'
+    ];
+
+    for (const p of commonPaths) {
+        if (fs.existsSync(p)) return p;
+    }
+    return null; // Deixa o puppeteer tentar achar no PATH
+}
+
 
 // --- INICIALIZAÇÃO ---
 db.initDb();
@@ -86,14 +105,11 @@ const client = new Client({
             '--no-zygote',
             '--disable-gpu'
         ],
-        // Tenta encontrar o cromo em caminhos comuns do Linux/Railway
-        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || 
-                        process.env.CHROME_BIN || 
-                        '/usr/bin/chromium' || 
-                        '/usr/bin/chromium-browser' || 
-                        '/usr/bin/google-chrome-stable'
+        // Usa a função inteligente para encontrar o navegador
+        executablePath: getChromePath()
     }
 });
+
 
 
 
