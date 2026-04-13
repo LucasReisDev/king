@@ -104,7 +104,7 @@ export default function WhatsAppModule() {
 
       {showConfig && (
         <div className="glass-card animate-fade-in" style={{ background: 'rgba(20, 20, 25, 0.95)', border: '1px solid var(--accent-primary)' }}>
-            <h4 style={{ marginBottom: '12px', fontSize: '14px' }}>Configuração de Ponte (Local &rarr; Vercel)</h4>
+            <h4 style={{ marginBottom: '12px', fontSize: '14px' }}>Configuração da Conexão Bot</h4>
             <div style={{ display: 'flex', gap: '12px' }}>
                 <input 
                     type="text" 
