@@ -37,10 +37,12 @@ let latestQr = null;
 let botStatus = 'DISCONNECTED'; // DISCONNECTED, CONNECTING, READY
 
 
-app.use(cors());
+app.use(cors({ origin: '*' })); // Libera Geral
 app.use(express.json());
 
-app.use(express.static('public'));
+// Permite acessar arquivos como qr.png via URL
+app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // --- API PARA A INTERFACE WEB ---
 
