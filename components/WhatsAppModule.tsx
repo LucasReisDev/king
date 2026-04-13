@@ -9,13 +9,28 @@ interface BotStatus {
 }
 
 export default function WhatsAppModule() {
-  const [botUrl, setBotUrl] = useState('http://localhost:3000');
+  // Tenta pegar o link salvo ou usa a variável de ambiente, fallback para localhost
+  const [botUrl, setBotUrl] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('xingling_bot_url');
+      return saved || process.env.NEXT_PUBLIC_BOT_URL || 'http://localhost:3000';
+    }
+    return 'http://localhost:3000';
+  });
+  
   const [status, setStatus] = useState<BotStatus>({ total: 0, status: 'DISCONNECTED', qr: null });
   const [isOnline, setIsOnline] = useState(false);
   const [inputData, setInputData] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Salva o link sempre que mudar
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('xingling_bot_url', botUrl);
+    }
+  }, [botUrl]);
 
   const fetchStatus = useCallback(async () => {
     try {
