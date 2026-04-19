@@ -169,7 +169,6 @@ export default function PartnersModule() {
                         style={{
                           padding: '6px 12px',
                           borderRadius: '20px',
-                          border: 'none',
                           fontSize: '11px',
                           fontWeight: '800',
                           cursor: 'pointer',
