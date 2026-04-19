@@ -14,9 +14,10 @@ const FIXED_PROXY = '3ee54d1ec977870e6156:69cb68fe09fc14c6@gw.dataimpulse.com:82
 export default function CheckerModule({ initialCredentials, onCredentialsChange }: { initialCredentials?: string, onCredentialsChange?: (val: string) => void }) {
   const [credentials, setCredentials] = useState(initialCredentials || '');
   const [isRunning, setIsRunning] = useState(false);
-  const isRunningRef = useRef(false); // Ref para controle preciso dentro do loop async
+  const isRunningRef = useRef(false);
   const [progress, setProgress] = useState({ current: 0, total: 0, hits: 0, fails: 0 });
   const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [hitsList, setHitsList] = useState<{user: string, pass: string}[]>([]); // New state for PDF export
   const logEndRef = useRef<HTMLDivElement>(null);
 
   // Sincroniza se o valor inicial mudar lá fora
@@ -51,6 +52,7 @@ export default function CheckerModule({ initialCredentials, onCredentialsChange 
     isRunningRef.current = true;
     setProgress({ current: 0, total: credLines.length, hits: 0, fails: 0 });
     setLogs([]);
+    setHitsList([]); // Reset hits for new run
     addLog('info', `Iniciando validação de ${credLines.length} contas...`);
 
     let hitCount = 0;
@@ -75,6 +77,7 @@ export default function CheckerModule({ initialCredentials, onCredentialsChange 
 
         if (result.success) {
           hitCount++;
+          setHitsList(prev => [...prev, { user: username, pass: password }]); // Store for PDF
           addLog('hit', `[SUCESSO] ${username}:${password}`);
         } else {
           failCount++;
@@ -95,6 +98,75 @@ export default function CheckerModule({ initialCredentials, onCredentialsChange 
     addLog('info', 'Processo finalizado!');
     setIsRunning(false);
     isRunningRef.current = false;
+  };
+
+  const exportHitsToPDF = () => {
+    if (hitsList.length === 0) return alert('Nenhum hit para exportar!');
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return alert('Por favor, permita pop-ups para gerar o PDF.');
+
+    const html = `
+      <html>
+        <head>
+          <title>Relatório de Hits - King Dashboard</title>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #333; }
+            .header { border-bottom: 2px solid #6d28d9; margin-bottom: 30px; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: flex-end; }
+            h1 { color: #6d28d9; margin: 0; font-size: 24px; }
+            .stats { font-size: 14px; color: #666; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th { background: #f3f4f6; text-align: left; padding: 12px; border-bottom: 1px solid #ddd; font-size: 13px; }
+            td { padding: 10px; border-bottom: 1px solid #eee; font-size: 13px; font-family: monospace; }
+            .footer { margin-top: 40px; font-size: 11px; color: #999; text-align: center; border-top: 1px solid #eee; padding-top: 20px; }
+            @media print { .no-print { display: none; } }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <h1>RELATÓRIO DE HITS</h1>
+              <div class="stats">Premium Suite - King Dashboard</div>
+            </div>
+            <div style="text-align: right">
+              <div class="stats">Data: ${new Date().toLocaleDateString('pt-BR')}</div>
+              <div class="stats">Total: <strong>${hitsList.length} contas</strong></div>
+            </div>
+          </div>
+          
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 50%">Usuário/E-mail</th>
+                <th style="width: 50%">Senha</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${hitsList.map(h => `
+                <tr>
+                  <td>${h.user}</td>
+                  <td>${h.pass}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div class="footer">
+            Relatório gerado automaticamente pelo King Dashboard - ${new Date().toLocaleString()}
+          </div>
+          
+          <script>
+            window.onload = () => {
+              window.print();
+              // window.close(); // Opcional: fechar após imprimir
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(html);
+    printWindow.document.close();
   };
 
   return (
@@ -120,11 +192,26 @@ export default function CheckerModule({ initialCredentials, onCredentialsChange 
 
           <button 
             className="btn-primary" 
-            style={{ width: '100%' }}
+            style={{ width: '100%', marginBottom: '10px' }}
             onClick={startChecking}
             disabled={isRunning}
           >
             {isRunning ? 'Validando...' : '🛡️ Iniciar Validação'}
+          </button>
+
+          <button 
+            className="btn-primary" 
+            style={{ 
+              width: '100%', 
+              background: hitsList.length > 0 ? 'linear-gradient(135deg, #10b981, #059669)' : 'rgba(255,255,255,0.05)',
+              color: hitsList.length > 0 ? 'white' : 'rgba(255,255,255,0.2)',
+              cursor: hitsList.length > 0 ? 'pointer' : 'not-allowed',
+              boxShadow: hitsList.length > 0 ? '0 4px 12px rgba(16, 185, 129, 0.2)' : 'none'
+            }}
+            onClick={exportHitsToPDF}
+            disabled={isRunning || hitsList.length === 0}
+          >
+            📄 Exportar Hits ({hitsList.length})
           </button>
         </div>
 

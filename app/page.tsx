@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation';
 import ExtractorModule from '@/components/ExtractorModule';
 import CheckerModule from '@/components/CheckerModule';
 import WhatsAppModule from '@/components/WhatsAppModule';
+import PartnersModule from '@/components/PartnersModule';
 
 
-type Tab = 'extrator' | 'checker' | 'whatsapp';
+type Tab = 'extrator' | 'checker' | 'whatsapp' | 'socios';
 
 
 export default function DashboardPage() {
@@ -74,6 +75,12 @@ export default function DashboardPage() {
             icon="💬"
             label="Bot do whatsapp"
           />
+          <TabButton
+            active={activeTab === 'socios'}
+            onClick={() => setActiveTab('socios')}
+            icon="👑"
+            label="Gerenciamento KL"
+          />
 
         </nav>
 
@@ -95,6 +102,7 @@ export default function DashboardPage() {
               {activeTab === 'extrator' && "Extração Inteligente"}
               {activeTab === 'checker' && "Validação de Acessos"}
               {activeTab === 'whatsapp' && "Central de Vendas WhatsApp"}
+              {activeTab === 'socios' && "BT PAINEL KING - SOCIOS"}
 
             </h1>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -118,6 +126,7 @@ export default function DashboardPage() {
             />
           )}
           {activeTab === 'whatsapp' && <WhatsAppModule />}
+          {activeTab === 'socios' && <PartnersModule />}
         </div>
 
       </main>
