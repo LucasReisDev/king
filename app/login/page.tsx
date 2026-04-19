@@ -42,7 +42,7 @@ export default function LoginPage() {
           </button>
         </form>
         <p style={{ marginTop: '24px', textAlign: 'center', fontSize: '12px', opacity: 0.5 }}>
-          Xingling Dashboard v1.0 • Seguro e Criptografado
+          Painel King Dashboard v1.0 • Seguro e Criptografado
         </p>
       </div>
     </div>

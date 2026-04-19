@@ -51,7 +51,7 @@ export default function DashboardPage() {
       }}>
         <div style={{ marginBottom: '48px', paddingLeft: '12px' }}>
           <h2 style={{ fontSize: '22px', fontWeight: '800', letterSpacing: '-0.5px', color: '#fff' }}>
-            XING<span style={{ color: 'var(--accent-primary)' }}>LING</span>
+            PAINEL <span style={{ color: 'var(--accent-primary)' }}>KING</span>
           </h2>
           <p style={{ fontSize: '11px', opacity: 0.5, marginTop: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>Premium Suite</p>
         </div>
