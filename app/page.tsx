@@ -6,9 +6,10 @@ import ExtractorModule from '@/components/ExtractorModule';
 import CheckerModule from '@/components/CheckerModule';
 import WhatsAppModule from '@/components/WhatsAppModule';
 import PartnersModule from '@/components/PartnersModule';
+import IderisModule from '@/components/IderisModule';
 
 
-type Tab = 'extrator' | 'checker' | 'whatsapp' | 'socios';
+type Tab = 'extrator' | 'checker' | 'whatsapp' | 'socios' | 'ideris';
 
 
 export default function DashboardPage() {
@@ -81,6 +82,12 @@ export default function DashboardPage() {
             icon="👑"
             label="Gerenciamento KL"
           />
+          <TabButton
+            active={activeTab === 'ideris'}
+            onClick={() => setActiveTab('ideris')}
+            icon="🛡️"
+            label="Validador Ideris"
+          />
 
         </nav>
 
@@ -103,6 +110,7 @@ export default function DashboardPage() {
               {activeTab === 'checker' && "Validação de Acessos"}
               {activeTab === 'whatsapp' && "Central de Vendas WhatsApp"}
               {activeTab === 'socios' && "BT PAINEL KING - SOCIOS"}
+              {activeTab === 'ideris' && "Validador Ideris Lab"}
 
             </h1>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -127,6 +135,7 @@ export default function DashboardPage() {
           )}
           {activeTab === 'whatsapp' && <WhatsAppModule />}
           {activeTab === 'socios' && <PartnersModule />}
+          {activeTab === 'ideris' && <IderisModule />}
         </div>
 
       </main>
