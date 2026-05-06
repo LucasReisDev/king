@@ -65,8 +65,11 @@ export default function CheckerModule({ initialCredentials, onCredentialsChange 
       const currentProxy = FIXED_PROXY;
 
       let retry = true;
+      let retryCount = 0;
+      const MAX_RETRIES = 3;
+
       while (retry && isRunningRef.current) {
-        addLog('info', `Verificando: ${username}...`);
+        addLog('info', `Verificando: ${username}${retryCount > 0 ? ` (Tentativa ${retryCount + 1})` : ''}...`);
 
         try {
           const res = await fetch('/api/validate', {
@@ -75,17 +78,26 @@ export default function CheckerModule({ initialCredentials, onCredentialsChange 
             body: JSON.stringify({ username, password, proxy: currentProxy })
           });
 
+          // Se for erro de proxy/rede, tenta novamente até o limite
           if (res.status === 403 || res.status === 502 || res.status === 504 || res.status === 429) {
-            addLog('error', `[PROXY/WAF ERRO] Status ${res.status}. Tentando novamente: ${username}...`);
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            continue;
+            retryCount++;
+            if (retryCount < MAX_RETRIES) {
+              addLog('error', `[PROXY/WAF ERRO] Status ${res.status}. Tentando novamente...`);
+              await new Promise(resolve => setTimeout(resolve, 2000));
+              continue;
+            } else {
+              addLog('fail', `[FALHA] ${username} - Limite de retentativas de proxy atingido.`);
+              failCount++;
+              retry = false;
+              continue;
+            }
           }
 
           const result = await res.json();
 
           if (result.success) {
             hitCount++;
-            setHitsList(prev => [...prev, { user: username, pass: password }]); // Store for PDF
+            setHitsList(prev => [...prev, { user: username, pass: password }]);
             addLog('hit', `[SUCESSO] ${username}:${password}`);
             retry = false;
           } else {
@@ -95,8 +107,15 @@ export default function CheckerModule({ initialCredentials, onCredentialsChange 
             retry = false;
           }
         } catch (err: any) {
-          addLog('error', `[ERRO DE CONEXÃO] ${username} - Problema. Retentando...`);
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          retryCount++;
+          if (retryCount < MAX_RETRIES) {
+            addLog('error', `[ERRO DE CONEXÃO] ${username} - Problema. Retentando...`);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          } else {
+            addLog('fail', `[FALHA] ${username} - Erro crítico de conexão após ${MAX_RETRIES} tentativas.`);
+            failCount++;
+            retry = false;
+          }
         }
       }
 
