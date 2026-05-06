@@ -96,6 +96,10 @@ const client = new Client({
     authStrategy: new LocalAuth({
         dataPath: path.join(__dirname, '.wwebjs_auth')
     }),
+    webVersionCache: {
+        type: 'none'
+    },
+    authTimeoutMs: 0,
     puppeteer: {
         headless: true,
         args: [
@@ -107,7 +111,6 @@ const client = new Client({
             '--no-zygote',
             '--disable-gpu'
         ],
-        // Usa a função inteligente para encontrar o navegador
         executablePath: getChromePath()
     }
 });
